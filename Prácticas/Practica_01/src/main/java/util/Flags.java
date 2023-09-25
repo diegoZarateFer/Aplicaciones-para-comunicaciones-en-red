@@ -15,4 +15,5 @@ public class Flags {
     public static final int ELIMINAR = 3;
     public static final int COPIAR = 4;
     public static final int CREAR_CARPETA = 5;
+    public static final int DESCONECTAR = 6;
 }
