@@ -1,7 +1,6 @@
 package cliente;
 
 import directorio.ArbolCarpetas;
-import directorio.Directorio;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -14,13 +13,14 @@ import java.net.Socket;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import util.Util;
-import util.Util;
 
 public class Cliente {
 
     private String host;
     private int puerto;
     private ServerSocket socketRecibidor;
+
+    public static final String RUTA_CLIENTE = "C:\\Users\\diego\\Documents\\Clases\\Aplicaciones para comunicaciones en red\\Aplicaciones-para-comunicaciones-en-red\\cliente\\";
 
     public Cliente(String host, int puerto) {
         this.host = host;
@@ -163,10 +163,10 @@ public class Cliente {
             String nombreArchivo = dis.readUTF();
             long tamArchivo = dis.readLong();
 
-            DataOutputStream dos = new DataOutputStream(new FileOutputStream(rutaDestino + "/" + nombreArchivo));
+            DataOutputStream dos = new DataOutputStream(new FileOutputStream(RUTA_CLIENTE + "/" + nombreArchivo));
 
             long recibidos = 0;
-            int l = 0;
+            int l;
             while (recibidos < tamArchivo) {
                 byte[] b = new byte[Util.TAM_BUFFER];
                 l = dis.read(b);
@@ -184,6 +184,8 @@ public class Cliente {
             dos.close();
             dis.close();
             cl.close();
+            
+            Util.descomprimirArchivoZIP(RUTA_CLIENTE + nombreArchivo, rutaDestino + "\\");
 
         } catch (Exception e) {
             e.printStackTrace();

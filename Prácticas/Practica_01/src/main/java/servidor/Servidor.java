@@ -1,7 +1,6 @@
 package servidor;
 
 import directorio.ArbolCarpetas;
-import directorio.Directorio;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -12,9 +11,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
-import util.Flags;
 import util.Util;
 
 public class Servidor {

@@ -16,24 +16,7 @@ import util.Util;
 public class CarpetaRemota {
 
     public final static String CARPETA_REMOTA = "C:\\Users\\diego\\Documents\\Clases\\Aplicaciones para comunicaciones en red\\Aplicaciones-para-comunicaciones-en-red\\servidor\\archivos\\";
-
-    public static void eliminarDirectorio(File dir) {
-        if (dir.exists()) {
-            if (dir.isDirectory()) {
-                File[] elementos = dir.listFiles();
-                for (File elemento : elementos) {
-                    if (elemento.isDirectory()) {
-                        eliminarDirectorio(elemento);
-                    } else {
-                        elemento.delete();
-                    }
-                }
-            }
-
-            dir.delete();
-        }
-    }
-
+    
     public static String obtenerExtensionArchivo(String rutaArchivo) {
         int i = rutaArchivo.lastIndexOf(".");
         if (i > 0 && i < rutaArchivo.length() - 1) {
@@ -90,7 +73,7 @@ public class CarpetaRemota {
                                 File archivoAEliminar = new File(carpetaRemota + rutaArchivo);
 
                                 //Eliminando el archivo.
-                                eliminarDirectorio(archivoAEliminar);
+                                Util.eliminarDirectorio(archivoAEliminar);
                             }
 
                             //Enviando JTree actualizado.
