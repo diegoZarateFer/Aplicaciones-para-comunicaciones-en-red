@@ -6,17 +6,21 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import util.Util;
 import util.Util;
 
 public class Cliente {
 
     private String host;
     private int puerto;
+    private ServerSocket socketRecibidor;
 
     public Cliente(String host, int puerto) {
         this.host = host;
@@ -56,6 +60,21 @@ public class Cliente {
             DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
 
             dos.writeInt(comando);
+            dos.flush();
+
+            dos.close();
+            socket.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void enviarCadena(String cadena) {
+        try {
+            Socket socket = new Socket(this.host, this.puerto);
+            DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
+
+            dos.writeUTF(cadena);
             dos.flush();
 
             dos.close();
@@ -133,18 +152,55 @@ public class Cliente {
             e.printStackTrace();
         }
     }
-    
+
+    public void recibirArchivoZip(String rutaDestino) {
+        try {
+
+            Socket cl = new Socket(this.host, this.puerto);
+            DataInputStream dis = new DataInputStream(cl.getInputStream());
+
+            //Obteniendo datos del archivo.
+            String nombreArchivo = dis.readUTF();
+            long tamArchivo = dis.readLong();
+
+            DataOutputStream dos = new DataOutputStream(new FileOutputStream(rutaDestino + "/" + nombreArchivo));
+
+            long recibidos = 0;
+            int l = 0;
+            while (recibidos < tamArchivo) {
+                byte[] b = new byte[Util.TAM_BUFFER];
+                l = dis.read(b);
+
+                if (l == -1) {
+                    break;
+                }
+
+                dos.write(b, 0, l);
+                dos.flush();
+
+                recibidos += l;
+            }
+
+            dos.close();
+            dis.close();
+            cl.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public void enviarRutaSeleccionada(String rutaDestino) {
         try {
             Socket socket = new Socket(this.host, this.puerto);
             DataOutputStream dos = new DataOutputStream(socket.getOutputStream());
-            
+
             dos.writeUTF(rutaDestino);
             dos.flush();
-            
+
             dos.close();
             socket.close();
-        } catch(Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

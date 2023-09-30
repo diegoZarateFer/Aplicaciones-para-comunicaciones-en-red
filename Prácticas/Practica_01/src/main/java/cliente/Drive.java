@@ -26,7 +26,8 @@ public class Drive {
         for (int i = 0; i < rutasElegidas.length; i++) {
             rutas[i] = "";
             Object[] componentesDeRuta = rutasElegidas[i].getPath();
-            for (Object componente : componentesDeRuta) {
+            for (int j = 1; j < componentesDeRuta.length; j++) {
+                Object componente = componentesDeRuta[j];
                 DefaultMutableTreeNode nodo = (DefaultMutableTreeNode) componente;
                 rutas[i] += "/" + nodo.toString();
             }
@@ -47,7 +48,7 @@ public class Drive {
         JFrame ventana = new JFrame("Mi carpeta");
 
         //El programa termina al cerrar esta ventana.
-        ventana.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        ventana.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         //Contenedor para el arbol de la carpeta.
         JScrollPane panelCarpeta = new JScrollPane(arbolCarpetas.obtenerArbol());
@@ -62,8 +63,8 @@ public class Drive {
         JButton botonDescargar = new JButton("Descargar");
         JButton botonRenombrar = new JButton("Renombrar");
         JButton botonEliminar = new JButton("Eliminar");
-        JButton botonCopiar = new JButton("Copiar");
         JButton botonCrearCarpeta = new JButton("Crear carpeta");
+        JButton botonCopiar = new JButton("Copiar");
 
         //Agregando acciones a cada boton.
         botonSubir.addActionListener(new ActionListener() {
@@ -139,6 +140,7 @@ public class Drive {
 
                         //Eliminando el arhivo zip.
                         archivoZip.delete();
+                        drectorioTemporal.delete();
 
                         //Recibimos el JTree del estado actual de la carpeta.
                         arbolCarpetas = cliente.recibirArbolCarpetas();
@@ -161,66 +163,195 @@ public class Drive {
         botonDescargar.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                cliente.enviarComando(Flags.DESCARGAR);
+
+                //Obtener archivos seleccionados para descargar.
+                TreePath[] seleccion = arbolCarpetas.obtenerArbol().getSelectionPaths();
+
+                //Verificando que se seleccione un elemento.
+                if (seleccion == null) {
+                    JOptionPane.showMessageDialog(ventana, "¡Selecciona los archivos que deseas descargar!", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                //Creando el selector de archivos.
+                JFileChooser selectorArchivos = new JFileChooser();
+
+                //Habilitando solo la seleccion de carpetas.
+                selectorArchivos.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+
+                //Mostrando el selector de archivos.
+                int respuesta = selectorArchivos.showOpenDialog(ventana);
+                if (respuesta == JFileChooser.APPROVE_OPTION) {
+
+                    //Guardando ruta donde se guarda el archivo.
+                    File destinoDescarga = selectorArchivos.getSelectedFile();
+
+                    //Enviando informacion al servidor.
+                    cliente.enviarComando(Flags.DESCARGAR);
+                    cliente.enviarRutasSeleccionadas(convertirRutasACadena(seleccion));
+
+                    //Recibiendo el archivo de descarga.
+                    cliente.recibirArchivoZip(destinoDescarga.getAbsolutePath());
+                }
             }
         });
 
         botonRenombrar.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                //Obtener elemento seleccionados para renombrar.
+                TreePath[] seleccion = arbolCarpetas.obtenerArbol().getSelectionPaths();
+
+                //Verificando que se seleccione un elemento.
+                if (seleccion == null) {
+                    JOptionPane.showMessageDialog(ventana, "¡Selecciona los archivos que deseas renombrar!", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                //Verificando que solo se seleccione un archivo.
+                if (seleccion.length > 1) {
+                    JOptionPane.showMessageDialog(ventana, "¡Selecciona solo un elemento!", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                String nuevoNombre = JOptionPane.showInputDialog(ventana, "Ingresa el nuevo nombre del elemento:");
+
+                //Cancelar operacion.
+                if (nuevoNombre == null) {
+                    return;
+                }
+
+                //Arreglo de rutas.
+                String rutas[] = convertirRutasACadena(seleccion);
+
+                //Enviando acciones al servidor.
                 cliente.enviarComando(Flags.RENOMBRAR);
-                JOptionPane.showMessageDialog(ventana, "Renombrar");
+                cliente.enviarRutaSeleccionada(rutas[0]);
+                cliente.enviarCadena(nuevoNombre);
+
+                //Recibimos el JTree del estado actual de la carpeta.
+                arbolCarpetas = cliente.recibirArbolCarpetas();
+
+                //Mostando el JTree actualizado.
+                panelCarpeta.setViewportView(arbolCarpetas.obtenerArbol());
+                panelCarpeta.updateUI();
             }
         });
 
         botonEliminar.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-//                TreePath[] rutasElegidas = arbolCarpeta.getSelectionPaths();
-//
-//                if (rutasElegidas == null) {
-//                    JOptionPane.showMessageDialog(ventana, "Debes seleccionar un elemento para eliminar.", "Error", JOptionPane.ERROR_MESSAGE);
-//                    return;
-//                }
-//
-//                String[] rutas = convertirRutasACadena(rutasElegidas);
-//
-//                //Enviando acciones al servidor.
-//                cliente.enviarComando(Flags.ELIMINAR);
-//                cliente.enviarRutasSeleccionadas(rutas);
-//
-//                //Recibimos el JTree del estado actual de la carpeta.
-//                Directorio carpeta = cliente.recibirCarpeta();
-//                arbolCarpeta = carpeta.getDirectory();
-//
-//                //Mostando el JTree actualizado.
-//                panelCarpeta.setViewportView(arbolCarpeta);
-//                panelCarpeta.updateUI();
-            }
-        });
+                TreePath[] rutasElegidas = arbolCarpetas.obtenerArbol().getSelectionPaths();
 
-        botonCopiar.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                cliente.enviarComando(Flags.COPIAR);
-                JOptionPane.showMessageDialog(ventana, "Copiar");
+                if (rutasElegidas == null) {
+                    JOptionPane.showMessageDialog(ventana, "¡Selecciona que archivos eliminar!", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                String[] rutas = convertirRutasACadena(rutasElegidas);
+
+                //Enviando acciones al servidor.
+                cliente.enviarComando(Flags.ELIMINAR);
+                cliente.enviarRutasSeleccionadas(rutas);
+
+                //Recibimos el JTree del estado actual de la carpeta.
+                arbolCarpetas = cliente.recibirArbolCarpetas();
+
+                //Mostando el JTree actualizado.
+                panelCarpeta.setViewportView(arbolCarpetas.obtenerArbol());
+                panelCarpeta.updateUI();
             }
         });
 
         botonCrearCarpeta.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                //Obteniendo todos los elementos selccionados.
+                TreePath[] seleccion = arbolCarpetas.obtenerArbol().getSelectionPaths();
+
+                //Verificando que se seleccione un elemento.
+                if (seleccion == null) {
+                    JOptionPane.showMessageDialog(ventana, "¡Selecciona una carpeta para subir tus archivos!", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                //Validando que solo se seleccione un elemento.
+                if (seleccion.length > 1) {
+                    JOptionPane.showMessageDialog(ventana, "¡Selecciona solo una carpeta para subir tus archivos!", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                //Obteniendo la ruta del nodo elegido.
+                TreePath caminoNodo = seleccion[0];
+
+                //Obtener el objeto asociado a la celda seleccionada.
+                DefaultMutableTreeNode celdaSeleccionada = (DefaultMutableTreeNode) caminoNodo.getLastPathComponent();
+                Nodo valorNodo = (Nodo) celdaSeleccionada.getUserObject();
+
+                //Validando que se seleccione una carpeta.
+                if (!valorNodo.esCarpeta()) {
+                    JOptionPane.showMessageDialog(ventana, "¡Debes seleccionar una carpeta!", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                String nombreCarpeta = JOptionPane.showInputDialog(ventana, "Ingresa el nombre de la carpeta:");
+
+                //Cancelar operacion.
+                if (nombreCarpeta == null) {
+                    return;
+                }
+
+                //Enviando acciones al servidor.
                 cliente.enviarComando(Flags.CREAR_CARPETA);
-                JOptionPane.showMessageDialog(ventana, "Crear Carpeta");
+                cliente.enviarRutaSeleccionada(valorNodo.rutaAsociada());
+                cliente.enviarCadena(nombreCarpeta);
+
+                //Recibimos el JTree del estado actual de la carpeta.
+                arbolCarpetas = cliente.recibirArbolCarpetas();
+
+                //Mostando el JTree actualizado.
+                panelCarpeta.setViewportView(arbolCarpetas.obtenerArbol());
+                panelCarpeta.updateUI();
             }
         });
 
-        ventana.addWindowListener(new WindowAdapter() {
+        botonCopiar.addActionListener(new ActionListener() {
             @Override
-            public void windowClosing(WindowEvent e) {
-                //Cerrando la conexion con el servidor cuando la ventana se cierra.
-                cliente.enviarComando(Flags.DESCONECTAR);
-                System.exit(0);
+            public void actionPerformed(ActionEvent e) {
+                //Obteniendo todos los elementos selccionados.
+                TreePath[] seleccion = arbolCarpetas.obtenerArbol().getSelectionPaths();
+
+                //Verificando que se seleccione al menos un elemento.
+                if (seleccion == null) {
+                    JOptionPane.showMessageDialog(ventana, "¡Selecciona una carpeta para subir tus archivos!", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                //Verificando que solo se seleccione solo un archivo.
+                if (seleccion.length > 1) {
+                    JOptionPane.showMessageDialog(ventana, "¡Selecciona solo un elemento!", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
+                String nombreCopia = JOptionPane.showInputDialog(ventana, "Ingresa el nombre de la copia:");
+                
+                if(nombreCopia == null) {
+                    return;
+                }
+
+                String[] rutas = convertirRutasACadena(seleccion);
+
+                //Enviando acciones al servidor.
+                cliente.enviarComando(Flags.COPIAR);
+                cliente.enviarRutaSeleccionada(rutas[0]);
+                cliente.enviarCadena(nombreCopia);
+
+                //Recibimos el JTree del estado actual de la carpeta.
+                arbolCarpetas = cliente.recibirArbolCarpetas();
+
+                //Mostando el JTree actualizado.
+                panelCarpeta.setViewportView(arbolCarpetas.obtenerArbol());
+                panelCarpeta.updateUI();
             }
         });
 
@@ -229,17 +360,23 @@ public class Drive {
         panelBotones.add(botonDescargar);
         panelBotones.add(botonRenombrar);
         panelBotones.add(botonEliminar);
-        panelBotones.add(botonCopiar);
         panelBotones.add(botonCrearCarpeta);
+        panelBotones.add(botonCopiar);
 
-        ventana.getContentPane().setLayout(new BoxLayout(ventana.getContentPane(), BoxLayout.Y_AXIS));
+        ventana.getContentPane()
+                .setLayout(new BoxLayout(ventana.getContentPane(), BoxLayout.Y_AXIS));
 
         // Agregar el contenido de la ventana.
-        ventana.getContentPane().add(panelCarpeta);
-        ventana.getContentPane().add(panelBotones);
+        ventana.getContentPane()
+                .add(panelCarpeta);
+        ventana.getContentPane()
+                .add(panelBotones);
 
-        ventana.setSize(600, 600);
-        ventana.setResizable(false);
-        ventana.setVisible(true);
+        ventana.setSize(
+                600, 600);
+        ventana.setResizable(
+                false);
+        ventana.setVisible(
+                true);
     }
 }

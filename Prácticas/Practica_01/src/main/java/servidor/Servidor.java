@@ -14,6 +14,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import util.Flags;
 import util.Util;
 
 public class Servidor {
@@ -68,7 +69,7 @@ public class Servidor {
         return -1;
     }
 
-    public String recibirRuta() {
+    public String recibirCadena() {
         try {
             Socket cl = this.socket.accept();
             DataInputStream dis = new DataInputStream(cl.getInputStream());
@@ -117,6 +118,40 @@ public class Servidor {
             //Descomprimir el archivo en la carpeta remota.
             Util.descomprimirArchivoZIP(RUTA_SERVIDOR + nombreArchivo, rutaDestino);
 
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    
+    public void enviarArchivo(Socket cl, File archivo) {
+        try {
+
+            //Obteniendo datos del archivo.
+            String nombreArchivo = archivo.getName();
+            String rutaArchivo = archivo.getAbsolutePath();
+            long tamArchivo = archivo.length();
+
+            //Canales.
+            DataOutputStream dos = new DataOutputStream(cl.getOutputStream());
+            DataInputStream dis = new DataInputStream(new FileInputStream(rutaArchivo));
+
+            dos.writeUTF(nombreArchivo);
+            dos.flush();
+
+            dos.writeLong(tamArchivo);
+            dos.flush();
+
+            long enviados = 0;
+            int l = 0;
+            byte[] b = new byte[Util.TAM_BUFFER];
+            while (enviados < tamArchivo && (l = dis.read(b)) != -1) {
+                dos.write(b, 0, l);
+                dos.flush();
+                enviados += l;
+            }
+
+            dis.close();
+            dos.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
