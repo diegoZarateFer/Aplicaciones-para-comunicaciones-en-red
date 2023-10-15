@@ -1,15 +1,8 @@
 package servidor;
 
-import static cliente.Drive.RUTA_CLIENTE;
 import directorio.ArbolCarpetas;
-import directorio.Directorio;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.net.Socket;
-import javax.swing.JTree;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
 import util.Flags;
 import util.Util;
 
