@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="Content-Type" content="text/html;" />
+    <title>Formulario de registro</title>
+  </head>
+  <body bgcolor="#e0e000" cz-shortcut-listen="true">
+    <center>
+      <h3>Ejemplo sencillo de un formulario</h3>
+      <h4>Formulario de Registro</h4>
+    </center>
+    <hr />
+    Sea tan amable de rellenar el siguiente formulario.
+    <br />
+    <form action="http://localhost:8000/" method="post" enctype="multipart/form-data">
+      Nombre: <br />
+      <input type="text" name="Apellido" />
+      <br />
+      Dirección: <br />
+      <input type="text" name="Direccion" />
+      <br />
+      Teléfono: <br />
+      <input type="text" name="Telefono" />
+      <br />
+      Comentarios:<br />
+      <textarea name="comentario" rows="7" cols="40"></textarea>
+      <input type="submit" value="Enviar datos" />
+      <input type="reset" value="Borrar datos" />
+    </form>
+  </body>
+</html>
